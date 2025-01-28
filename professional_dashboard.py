@@ -17,20 +17,23 @@ def fetch_linkedin_data(profile_url):
     # Ensure URL has proper format
     if not profile_url.startswith('https://'):
         profile_url = 'https://' + profile_url
-    
+        
     headers = {
         "X-RapidAPI-Key": "e76e6d59aamshd5745b36f1e312ap1a642ejsn4a367f21a64c",
         "X-RapidAPI-Host": "fresh-linkedin-profile-data.p.rapidapi.com"
     }
     
     try:
-        # Construct the endpoint URL
-        base_url = "https://fresh-linkedin-profile-data.p.rapidapi.com/get-profile"
+        # Use search-by-name endpoint
+        base_url = "https://fresh-linkedin-profile-data.p.rapidapi.com/search-by-name"
         
-        # Use proper query parameters
+        # Extract name from URL
+        name = profile_url.split('/in/')[-1].replace('-', ' ').replace('/', '')
+        
         querystring = {
-            "url": profile_url,
-            "include_skills": "false"
+            "keyword": name,
+            "location": "United States",
+            "page_size": "1"
         }
         
         # Make the request
@@ -38,7 +41,9 @@ def fetch_linkedin_data(profile_url):
         
         # Debug information
         st.sidebar.write("Debug - Profile URL:", profile_url)
+        st.sidebar.write("Debug - Search Name:", name)
         st.sidebar.write("Debug - Status Code:", response.status_code)
+        st.sidebar.write("Debug - Full URL:", response.url)
         
         response.raise_for_status()
         return response.json()
