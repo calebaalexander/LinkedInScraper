@@ -19,22 +19,28 @@ def fetch_linkedin_data(profile_url):
         "X-RapidAPI-Host": "fresh-linkedin-profile-data.p.rapidapi.com"
     }
     
-    # Encode the LinkedIn URL
-    encoded_url = quote(profile_url)
-    
-    # Use the get-job-details endpoint as shown in documentation
-    api_url = f"https://fresh-linkedin-profile-data.p.rapidapi.com/get-job-details?job_url={encoded_url}&include_skills=false&include_hiring_team=false"
-    
-    # Debug output
-    st.sidebar.write("Debug - API URL:", api_url)
-    
     try:
-        response = requests.get(api_url, headers=headers)
+        # Use the base endpoint for profile data
+        api_url = "https://fresh-linkedin-profile-data.p.rapidapi.com/get-profile"
+        
+        # Set up query parameters
+        params = {
+            "linkedin_url": profile_url,
+            "include_skills": "false"
+        }
+        
+        # Make the request
+        response = requests.get(api_url, headers=headers, params=params)
+        
+        # Debug information
+        st.sidebar.write("Debug - API URL:", response.url)
+        st.sidebar.write("Debug - Status Code:", response.status_code)
+        
         response.raise_for_status()
-        st.write("Debug - API Response:", response.text)  # Debug line
         return response.json()
     except requests.exceptions.RequestException as e:
         st.error(f"API Error: {str(e)}")
+        st.error(f"Full URL: {response.url}")
         return None
 
 # Sidebar for search
