@@ -22,8 +22,11 @@ def fetch_linkedin_data(profile_url):
     # Encode the LinkedIn URL
     encoded_url = quote(profile_url)
     
-    # Use the correct endpoint and parameters
-    api_url = f"https://fresh-linkedin-profile-data.p.rapidapi.com/profile-details?linkedin_url={encoded_url}&include_skills=false"
+    # Use the get-job-details endpoint as shown in documentation
+    api_url = f"https://fresh-linkedin-profile-data.p.rapidapi.com/get-job-details?job_url={encoded_url}&include_skills=false&include_hiring_team=false"
+    
+    # Debug output
+    st.sidebar.write("Debug - API URL:", api_url)
     
     try:
         response = requests.get(api_url, headers=headers)
