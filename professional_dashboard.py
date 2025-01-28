@@ -1,132 +1,93 @@
 import streamlit as st
-import pandas as pd
+import re
 from datetime import datetime
 
 # Page configuration
 st.set_page_config(
-    page_title="Professional Profile Dashboard",
-    page_icon="👔",
+    page_title="LinkedIn Profile Analyzer",
+    page_icon="📊",
     layout="wide"
 )
 
-# Custom CSS for better styling
-st.markdown("""
-    <style>
-    .big-font {
-        font-size:30px !important;
-        font-weight: bold;
-    }
-    .profile-header {
-        padding: 20px;
-        border-radius: 10px;
-        background-color: #f0f2f6;
-        margin-bottom: 20px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# Mock data - replace with actual API data in production
-mock_profile = {
-    "name": "Professional Profile Viewer",
-    "headline": "Example Professional Dashboard",
-    "location": "New York, NY",
-    "industry": "Technology",
-    "experience": [
-        {
-            "title": "Senior Developer",
-            "company": "Tech Corp",
-            "duration": "2020 - Present",
-            "description": "Lead development of enterprise applications"
-        },
-        {
-            "title": "Software Engineer",
-            "company": "StartUp Inc",
-            "duration": "2018 - 2020",
-            "description": "Full-stack development and system architecture"
-        }
-    ],
-    "education": [
-        {
-            "school": "University of Technology",
-            "degree": "Master's in Computer Science",
-            "year": "2018"
-        }
-    ],
-    "skills": ["Python", "Data Analysis", "Machine Learning", "Web Development", "API Integration"]
-}
-
-# Sidebar for search and filters
+# Sidebar inputs
 with st.sidebar:
-    st.header("Search Settings")
+    st.header("Profile Search")
     
-    # Search input
-    search_query = st.text_input("Search Profiles", placeholder="Enter name or keyword")
-    
-    # Filters
-    st.subheader("Filters")
-    industry_filter = st.multiselect(
-        "Industry",
-        ["Technology", "Healthcare", "Finance", "Education", "Other"]
+    # LinkedIn URL input
+    linkedin_url = st.text_input(
+        "Enter LinkedIn URL",
+        placeholder="www.linkedin.com/in/username"
     )
     
-    location_filter = st.multiselect(
-        "Location",
-        ["New York, NY", "San Francisco, CA", "Chicago, IL", "Remote"]
-    )
+    st.markdown("---")
     
-    experience_filter = st.slider(
-        "Years of Experience",
-        0, 20, (0, 20)
+    # Keyword search
+    st.header("Content Search")
+    search_term = st.text_input(
+        "Search profile content",
+        placeholder="Enter keyword (e.g. 'analytics')"
     )
 
-# Main content
-st.markdown('<p class="big-font">Professional Profile Dashboard</p>', unsafe_allow_html=True)
+# Mock profile data - replace with actual API data in production
+def get_profile_data(url):
+    # This would be replaced with actual API calls
+    return {
+        "name": "Caleb A. Alexander",
+        "current_role": "Professor of Epidemiology and Medicine",
+        "experience_years": 15,
+        "education": "Johns Hopkins Bloomberg School of Public Health",
+        "full_text": """
+        Founding Director of the Center for Drug Safety and Effectiveness.
+        Professor of Epidemiology and Medicine at Johns Hopkins.
+        Focuses on pharmaceutical analytics and drug safety research.
+        Conducts population-based studies using analytics methods.
+        Expertise in pharmacoepidemiology and health services research.
+        Uses advanced analytics for drug utilization studies.
+        """
+    }
 
-# Profile header
-col1, col2 = st.columns([2, 1])
-with col1:
-    st.markdown(f"## {mock_profile['name']}")
-    st.markdown(f"*{mock_profile['headline']}*")
-    st.markdown(f"📍 {mock_profile['location']} | 🏢 {mock_profile['industry']}")
+# Main content area
+if linkedin_url:
+    profile_data = get_profile_data(linkedin_url)
+    
+    # Display key profile information
+    st.header("Profile Summary")
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown(f"### {profile_data['name']}")
+        st.markdown(f"**Current Role:** {profile_data['current_role']}")
+        st.markdown(f"**Years of Experience:** {profile_data['experience_years']}")
+        st.markdown(f"**Education:** {profile_data['education']}")
 
-# Experience section
-st.header("Experience")
-for exp in mock_profile['experience']:
-    with st.expander(f"{exp['title']} at {exp['company']}", expanded=True):
-        st.markdown(f"**Duration:** {exp['duration']}")
-        st.markdown(exp['description'])
+    # Handle keyword search
+    if search_term:
+        st.markdown("---")
+        st.header(f"Search Results for '{search_term}'")
+        
+        # Search through profile text
+        text = profile_data['full_text']
+        sentences = text.split('.')
+        found = False
+        
+        for sentence in sentences:
+            if search_term.lower() in sentence.lower():
+                found = True
+                # Highlight the search term
+                highlighted = re.sub(
+                    f'({search_term})',
+                    r'**\1**',
+                    sentence,
+                    flags=re.IGNORECASE
+                )
+                st.markdown(f"• {highlighted.strip()}")
+        
+        if not found:
+            st.info(f"No mentions of '{search_term}' found in the profile.")
 
-# Education section
-st.header("Education")
-for edu in mock_profile['education']:
-    st.markdown(f"**{edu['school']}**")
-    st.markdown(f"{edu['degree']} ({edu['year']})")
-
-# Skills section
-st.header("Skills")
-skills_cols = st.columns(3)
-for idx, skill in enumerate(mock_profile['skills']):
-    with skills_cols[idx % 3]:
-        st.button(skill, key=f"skill_{idx}")
-
-# Analytics section
-st.header("Profile Analytics")
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.metric("Profile Views", "1,234", "+12%")
-with col2:
-    st.metric("Search Appearances", "567", "+8%")
-with col3:
-    st.metric("Connection Rate", "76%", "-2%")
-
-# Activity chart
-st.subheader("Profile Activity")
-activity_data = pd.DataFrame({
-    'Date': pd.date_range(start='2024-01-01', periods=30, freq='D'),
-    'Views': np.random.randint(10, 100, 30)
-})
-st.line_chart(activity_data.set_index('Date'))
+else:
+    st.info("👈 Enter a LinkedIn URL in the sidebar to start analyzing a profile")
 
 # Footer
 st.markdown("---")
-st.markdown("*This is a demo dashboard. Connect real data sources for production use.*")
+st.markdown("*Note: This is a demo using mock data. Connect to appropriate APIs for production use.*")
