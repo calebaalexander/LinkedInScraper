@@ -22,11 +22,13 @@ def fetch_linkedin_data(profile_url):
     # Encode the LinkedIn URL
     encoded_url = quote(profile_url)
     
-    api_url = f"https://fresh-linkedin-profile-data.p.rapidapi.com/get-job-details?job_url={encoded_url}&include_skills=false&include_hiring_team=false"
+    # Use the profile data endpoint instead of job details
+    api_url = f"https://fresh-linkedin-profile-data.p.rapidapi.com/get-profile?url={encoded_url}"
     
     try:
         response = requests.get(api_url, headers=headers)
         response.raise_for_status()
+        st.write("Debug - API Response:", response.text)  # Debug line
         return response.json()
     except requests.exceptions.RequestException as e:
         st.error(f"API Error: {str(e)}")
@@ -59,38 +61,69 @@ if profile_url:
         profile_data = fetch_linkedin_data(profile_url)
         
         if profile_data:
-            # Display key profile information
-            st.subheader("Profile Information")
             try:
-                col1, col2 = st.columns(2)
+                # Display key profile information
+                st.subheader("Profile Information")
+                
+                # Profile header with image
+                col1, col2, col3 = st.columns([1, 2, 1])
+                
                 with col1:
-                    if 'job_title' in profile_data:
-                        st.markdown(f"**Job Title:** {profile_data['job_title']}")
-                    if 'company' in profile_data:
-                        st.markdown(f"**Company:** {profile_data['company']}")
-                with col2:
+                    if 'profile_pic_url' in profile_data:
+                        st.image(profile_data['profile_pic_url'], width=200)
+                    else:
+                        # Display a placeholder avatar
+                        st.image("https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y", width=200)
+                
+                # Main profile information
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    if 'full_name' in profile_data:
+                        st.markdown(f"**Name:** {profile_data['full_name']}")
+                    if 'headline' in profile_data:
+                        st.markdown(f"**Headline:** {profile_data['headline']}")
                     if 'location' in profile_data:
                         st.markdown(f"**Location:** {profile_data['location']}")
-                    if 'employment_type' in profile_data:
-                        st.markdown(f"**Employment Type:** {profile_data['employment_type']}")
                 
-                # Display job description if available
-                if 'description' in profile_data:
-                    st.subheader("Job Description")
-                    st.markdown(profile_data['description'])
+                with col2:
+                    if 'current_company' in profile_data:
+                        st.markdown(f"**Current Company:** {profile_data['current_company']}")
+                    if 'connections' in profile_data:
+                        st.markdown(f"**Connections:** {profile_data['connections']}")
+                
+                # Experience section
+                if 'experiences' in profile_data:
+                    st.subheader("Experience")
+                    for exp in profile_data['experiences']:
+                        with st.expander(f"{exp.get('title', 'Role')} at {exp.get('company', 'Company')}"):
+                            st.markdown(f"**Duration:** {exp.get('date_range', 'N/A')}")
+                            st.markdown(f"**Location:** {exp.get('location', 'N/A')}")
+                            if 'description' in exp:
+                                st.markdown(exp['description'])
+                
+                # Education section
+                if 'education' in profile_data:
+                    st.subheader("Education")
+                    for edu in profile_data['education']:
+                        st.markdown(f"**{edu.get('school', 'School')}**")
+                        st.markdown(f"{edu.get('degree', 'Degree')} ({edu.get('date_range', 'N/A')})")
                 
                 # Handle search functionality
                 if search_query:
                     st.subheader(f"Search Results for '{search_query}'")
                     json_str = json.dumps(profile_data, indent=2).lower()
-                    content_str = str(profile_data.get('description', '')).lower()
                     
-                    if search_query.lower() in content_str:
-                        # Split into sentences and highlight matches
-                        sentences = content_str.split('.')
-                        for sentence in sentences:
-                            if search_query.lower() in sentence:
-                                st.markdown(f"• ...{sentence.strip()}...")
+                    # Search in all text content
+                    search_results = []
+                    if 'experiences' in profile_data:
+                        for exp in profile_data['experiences']:
+                            if 'description' in exp and search_query.lower() in exp['description'].lower():
+                                search_results.append(f"Found in experience at {exp['company']}: {exp['description']}")
+                    
+                    if search_results:
+                        for result in search_results:
+                            st.markdown(f"• {result}")
                     else:
                         st.info(f"No matches found for '{search_query}'")
                 
