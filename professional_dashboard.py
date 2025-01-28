@@ -14,26 +14,30 @@ def fetch_linkedin_data(profile_url):
     """
     Fetch data from Fresh LinkedIn Profile Data API
     """
+    # Ensure URL has proper format
+    if not profile_url.startswith('https://'):
+        profile_url = 'https://' + profile_url
+    
     headers = {
         "X-RapidAPI-Key": "e76e6d59aamshd5745b36f1e312ap1a642ejsn4a367f21a64c",
         "X-RapidAPI-Host": "fresh-linkedin-profile-data.p.rapidapi.com"
     }
     
     try:
-        # Use the base endpoint for profile data
-        api_url = "https://fresh-linkedin-profile-data.p.rapidapi.com/get-profile"
+        # Construct the endpoint URL
+        base_url = "https://fresh-linkedin-profile-data.p.rapidapi.com/get-profile"
         
-        # Set up query parameters
-        params = {
-            "linkedin_url": profile_url,
+        # Use proper query parameters
+        querystring = {
+            "url": profile_url,
             "include_skills": "false"
         }
         
         # Make the request
-        response = requests.get(api_url, headers=headers, params=params)
+        response = requests.get(base_url, headers=headers, params=querystring)
         
         # Debug information
-        st.sidebar.write("Debug - API URL:", response.url)
+        st.sidebar.write("Debug - Profile URL:", profile_url)
         st.sidebar.write("Debug - Status Code:", response.status_code)
         
         response.raise_for_status()
